@@ -8,16 +8,18 @@ import (
 	"net/http"
 )
 
+type Properties map[string]string
+
 type Request struct {
-	Verb    string `json:"verb"`
-	Headers string `json:"headers"`
-	Body    string `json:"body"`
+	Verb    string     `json:"verb"`
+	Headers Properties `json:"headers"`
+	Body    Properties `json:"body"`
 }
 
 type Response struct {
-	StatusCode int    `json:"status"`
-	Headers    string `json:"headers"`
-	Body       string `json:"body"`
+	StatusCode int        `json:"status"`
+	Headers    Properties `json:"headers"`
+	Body       string     `json:"body"`
 }
 
 type Mock struct {
@@ -31,10 +33,114 @@ type MockLoaderResponse struct {
 	Status     string `json:"status"`
 }
 
-var mocks map[string]Mock
+type MockErrorResponse struct {
+	StatusCode int    `json:"statusCode"`
+	Status     string `json:"status"`
+	Detail     string `json:"detail"`
+}
+
+var mocks = make(map[string]Mock)
 
 func handler(w http.ResponseWriter, r *http.Request) {
-	w.Write([]byte("Hello!"))
+	var mock Mock
+	var ok bool
+	w.Header().Set("content-type", "application/json")
+
+	// strip end point, and verb
+	key := fmt.Sprintf("%s-%s", r.URL, r.Method)
+	if mock, ok = mocks[key]; !ok {
+		res := MockErrorResponse{}
+		w.WriteHeader(http.StatusBadRequest)
+		res.StatusCode = http.StatusBadRequest
+		res.Status = "Bad Request"
+		res.Detail = fmt.Sprintf("No mock for found for Url:%s and Method: %s", r.URL, r.Method)
+		out, err := json.Marshal(res)
+		if err != nil {
+			log.Println(err)
+		}
+		_, _ = w.Write(out)
+		return
+	}
+
+	// we have a mock we can respond with
+	// check request meets expectations
+	// request headers
+	allHeaders := true
+
+	for mk, mv := range mock.Request.Headers {
+		hv := r.Header.Get(mk)
+		if hv == "" {
+			allHeaders = false
+		}
+		if hv != mv {
+			allHeaders = false
+		}
+	}
+
+	if !allHeaders {
+		res := MockErrorResponse{}
+		w.WriteHeader(http.StatusNotAcceptable)
+		res.StatusCode = http.StatusNotAcceptable
+		res.Status = "Not Acceptable"
+		res.Detail = fmt.Sprintf("Request Headers do not meet expectations. Wanted: %v, Got: %v", mock.Request.Headers, r.Header)
+		out, err := json.Marshal(res)
+		if err != nil {
+			log.Println(err)
+		}
+		_, _ = w.Write(out)
+		return
+	}
+
+	// request body
+	allRequestBody := true
+	reqBody := Properties{}
+	bytes, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		log.Fatalln(err)
+	}
+	defer r.Body.Close()
+
+	err = json.Unmarshal(bytes, &reqBody)
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	for mk, mv := range mock.Request.Body {
+		var bv string
+		var ok bool
+		if bv, ok = reqBody[mk]; !ok {
+			allRequestBody = false
+		} else {
+			if mv != bv {
+				allRequestBody = false
+			}
+		}
+	}
+
+	if !allRequestBody {
+		res := MockErrorResponse{}
+		w.WriteHeader(http.StatusNotAcceptable)
+		res.StatusCode = http.StatusNotAcceptable
+		res.Status = "Not Acceptable"
+		res.Detail = fmt.Sprintf("Request Body does not meet expecations. Wanted: %v, Got: %v", mock.Request.Body, reqBody)
+		out, err := json.Marshal(res)
+		if err != nil {
+			log.Println(err)
+		}
+		_, _ = w.Write(out)
+		return
+	}
+
+	// if here we are good and we'll output the mock response
+	w.WriteHeader(mock.Response.StatusCode)
+	for k, v := range mock.Response.Headers {
+		w.Header().Add(k, v)
+	}
+	body, err := json.Marshal(mock.Response.Body)
+	if err != nil {
+		log.Fatalln(err)
+	}
+	_, _ = w.Write(body)
 }
 
 func mockLoader(w http.ResponseWriter, r *http.Request) {
@@ -65,8 +171,8 @@ func mockLoader(w http.ResponseWriter, r *http.Request) {
 			}
 
 			// add/update the mocks list
-			// key is endpoint, verb response statuscode
-			mockKey := fmt.Sprintf("%s-%s-%d", mock.EndPoint, mock.Request.Verb, mock.Response.StatusCode)
+			// key is endpoint, verb
+			mockKey := fmt.Sprintf("%s-%s", mock.EndPoint, mock.Request.Verb)
 			mocks[mockKey] = mock
 		}
 
@@ -91,7 +197,7 @@ func mockLoader(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
-	mocks = map[string]Mock{}
+	//mocks = map[string]Mock{}
 
 	// port for server should be read from command line
 	port := "9999"
