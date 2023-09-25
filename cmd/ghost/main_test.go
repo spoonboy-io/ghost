@@ -125,8 +125,6 @@ func TestMockLoader(t *testing.T) {
 			}
 
 		})
-
-		fmt.Println(mocks)
 	}
 }
 
@@ -330,7 +328,7 @@ func TestHandler(t *testing.T) {
 			},
 		},
 		{
-			Name:   "Bad, request body propery not present",
+			Name:   "Bad, request body property not present",
 			Method: "POST",
 			Mock: Mock{
 				EndPoint: "good/data",
@@ -380,13 +378,13 @@ func TestHandler(t *testing.T) {
 			if status := rr.Code; status != tc.WantStatus.StatusCode {
 				t.Errorf("handler returned wrong status code: got %v want %v",
 					status, tc.WantStatus.StatusCode)
-
-				detailBytes, err := ioutil.ReadAll(rr.Body)
-				if err != nil {
-					t.Fatal(err)
-				}
-				t.Log(string(detailBytes))
 			}
+
+			detailBytes, err := ioutil.ReadAll(rr.Body)
+			if err != nil {
+				t.Fatal(err)
+			}
+			t.Log(string(detailBytes))
 
 		})
 	}

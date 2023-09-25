@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"flag"
 	"fmt"
 	"io/ioutil"
 	"log"
@@ -197,16 +198,18 @@ func mockLoader(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
-	//mocks = map[string]Mock{}
-
 	// port for server should be read from command line
-	port := "9999"
-	port = fmt.Sprintf(":%s", port)
+	var port int
+
+	flag.IntVar(&port, "p", 9999, "Specify a port number (default is 9999")
+	flag.Parse()
+	portStr := fmt.Sprintf(":%d", port)
+
 	http.HandleFunc("/", handler)
 	http.HandleFunc("/load/mock", mockLoader)
 
-	log.Println("Starting Ghost server on port", port)
-	if err := http.ListenAndServe(":9999", nil); err != nil {
+	log.Println("Starting Ghost server on port", portStr)
+	if err := http.ListenAndServe(portStr, nil); err != nil {
 		log.Fatalln("failed to start server")
 	}
 }
