@@ -205,7 +205,10 @@ func main() {
 	flag.Parse()
 	portStr := fmt.Sprintf(":%d", port)
 
+	// handlers
+	// everything hits this endpoint
 	http.HandleFunc("/", handler)
+	// except this one, where we can load mock config in realtime
 	http.HandleFunc("/load/mock", mockLoader)
 
 	log.Println("Starting Ghost server on port", portStr)

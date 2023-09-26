@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -274,6 +273,33 @@ func TestHandler(t *testing.T) {
 			},
 		},
 		{
+			Name:   "Good request but header key not match (case)",
+			Method: "POST",
+			Mock: Mock{
+				EndPoint: "good/data",
+				Request: Request{
+					Verb: "POST",
+					Headers: Properties{
+						"Content-Type": "application/json",
+					},
+					Body: Properties{
+						"testKey": "test value",
+					},
+				},
+				Response: Response{
+					StatusCode: 201,
+					Headers: Properties{
+						"content-type": "application/json",
+					},
+					Body: "{\"hello\":\"world\"}",
+				},
+			},
+			WantStatusCode: http.StatusCreated,
+			WantStatus: MockLoaderResponse{
+				StatusCode: http.StatusCreated,
+			},
+		},
+		{
 			Name:   "Bad, request header not present",
 			Method: "POST",
 			Mock: Mock{
@@ -312,6 +338,33 @@ func TestHandler(t *testing.T) {
 					},
 					Body: Properties{
 						"testKey": "this is the wrong value",
+					},
+				},
+				Response: Response{
+					StatusCode: 201,
+					Headers: Properties{
+						"content-type": "application/json",
+					},
+					Body: "{\"hello\":\"world\"}",
+				},
+			},
+			WantStatusCode: http.StatusNotAcceptable,
+			WantStatus: MockLoaderResponse{
+				StatusCode: http.StatusNotAcceptable,
+			},
+		},
+		{
+			Name:   "Bad request but body key not match (case we are not doing case match on request body)",
+			Method: "POST",
+			Mock: Mock{
+				EndPoint: "good/data",
+				Request: Request{
+					Verb: "POST",
+					Headers: Properties{
+						"content-type": "application/json",
+					},
+					Body: Properties{
+						"testkey": "test value",
 					},
 				},
 				Response: Response{
@@ -380,11 +433,13 @@ func TestHandler(t *testing.T) {
 					status, tc.WantStatus.StatusCode)
 			}
 
-			detailBytes, err := ioutil.ReadAll(rr.Body)
-			if err != nil {
-				t.Fatal(err)
-			}
-			t.Log(string(detailBytes))
+			/*
+				detailBytes, err := ioutil.ReadAll(rr.Body)
+				if err != nil {
+					t.Fatal(err)
+				}
+				t.Log(string(detailBytes))
+			*/
 
 		})
 	}
