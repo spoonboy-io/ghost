@@ -28,12 +28,12 @@ var mocksCache = make(map[string]mocks.Mock)
 func handler(w http.ResponseWriter, r *http.Request) {
 	var mock mocks.Mock
 	var ok bool
-	w.Header().Set("content-type", "application/json")
 
 	// strip end point, and verb
 	key := fmt.Sprintf("%s-%s", r.URL, r.Method)
 	if mock, ok = mocksCache[key]; !ok {
 		res := MockErrorResponse{}
+		w.Header().Set("content-type", "application/json")
 		w.WriteHeader(http.StatusBadRequest)
 		res.StatusCode = http.StatusBadRequest
 		res.Status = "Bad Request"
@@ -63,6 +63,7 @@ func handler(w http.ResponseWriter, r *http.Request) {
 
 	if !allHeaders {
 		res := MockErrorResponse{}
+		w.Header().Set("content-type", "application/json")
 		w.WriteHeader(http.StatusNotAcceptable)
 		res.StatusCode = http.StatusNotAcceptable
 		res.Status = "Not Acceptable"
@@ -84,18 +85,20 @@ func handler(w http.ResponseWriter, r *http.Request) {
 	}
 	defer r.Body.Close()
 
-	if r.Header.Get("Content-Type") == "application/x-www-form-urlencoded" {
-		// make the map by parsing
-		pairs := strings.Split(string(bytes), "&")
-		for _, pair := range pairs {
-			kv := strings.Split(pair, "=")
-			reqBody[kv[0]] = kv[1]
-		}
-	} else {
-		// json to unmarshal
-		err = json.Unmarshal(bytes, &reqBody)
-		if err != nil {
-			log.Fatalln("could not unmarshal request body", err)
+	if len(bytes) > 0 {
+		if r.Header.Get("Content-Type") == "application/x-www-form-urlencoded" {
+			// make the map by parsing
+			pairs := strings.Split(string(bytes), "&")
+			for _, pair := range pairs {
+				kv := strings.Split(pair, "=")
+				reqBody[kv[0]] = kv[1]
+			}
+		} else {
+			// json to unmarshal
+			err = json.Unmarshal(bytes, &reqBody)
+			if err != nil {
+				log.Fatalln("could not unmarshal request body", err)
+			}
 		}
 	}
 
@@ -113,6 +116,7 @@ func handler(w http.ResponseWriter, r *http.Request) {
 
 	if !allRequestBody {
 		res := MockErrorResponse{}
+		w.Header().Set("content-type", "application/json")
 		w.WriteHeader(http.StatusNotAcceptable)
 		res.StatusCode = http.StatusNotAcceptable
 		res.Status = "Not Acceptable"
@@ -130,9 +134,19 @@ func handler(w http.ResponseWriter, r *http.Request) {
 	for k, v := range mock.Response.Headers {
 		w.Header().Add(k, v)
 	}
+
+	// handle text/plain
+	if ct, ok := mock.Response.Headers["Content-Type"]; ok {
+		if ct == "text/plain" {
+			w.Header().Set("content-type", "text/plain")
+			_, _ = w.Write([]byte(mock.Response.Body))
+			return
+		}
+	}
+
 	body, err := json.Marshal(mock.Response.Body)
 	if err != nil {
-		log.Fatalln("could not marshal reponse body", err)
+		log.Fatalln("could not marshal response body", err)
 	}
 	_, _ = w.Write(body)
 }

@@ -19,3 +19,8 @@ type Mock struct {
 	Request  Request  `json:"request"`
 	Response Response `json:"response"`
 }
+
+type Mocker interface {
+	Mocks() []Mock
+	Name() string
+}

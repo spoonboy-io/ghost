@@ -20,7 +20,6 @@ type TestCase struct {
 }
 
 func TestMockLoader(t *testing.T) {
-	//mocks = map[string]Mock{}
 
 	testCases := []TestCase{
 		{
@@ -433,14 +432,6 @@ func TestHandler(t *testing.T) {
 				t.Errorf("handler returned wrong status code: got %v want %v",
 					status, tc.WantStatus.StatusCode)
 			}
-
-			/*
-				detailBytes, err := ioutil.ReadAll(rr.Body)
-				if err != nil {
-					t.Fatal(err)
-				}
-				t.Log(string(detailBytes))
-			*/
 
 		})
 	}
