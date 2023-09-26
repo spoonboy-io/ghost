@@ -4,8 +4,8 @@
 
 [![GitHub go.mod Go version](https://img.shields.io/github/go-mod/go-version/spoonboy-io/ghost?style=flat-square)](https://go.dev/)
 [![Go Report Card](https://goreportcard.com/badge/github.com/spoonboy-io/ghost?style=flat-square)](https://goreportcard.com/report/github.com/spoonboy-io/ghost)
-[![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/spoonboy-io/ghost/build.yml?branch=master&style=flat-square)](https://github.com/spoonboy-io/ghost/actions/workflows/build.yml)
-[![GitHub Workflow Status (branch)](https://img.shields.io/github/actions/workflow/status/spoonboy-io/ghost/unit_test.yml?branch=master&label=tests&style=flat-square)](https://github.com/spoonboy-io/ghost/actions/workflows/unit_test.yml)
+[![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/spoonboy-io/ghost/build.yml?branch=main&style=flat-square)](https://github.com/spoonboy-io/ghost/actions/workflows/build.yml)
+[![GitHub Workflow Status (branch)](https://img.shields.io/github/actions/workflow/status/spoonboy-io/ghost/unit_test.yml?branch=main&label=tests&style=flat-square)](https://github.com/spoonboy-io/ghost/actions/workflows/unit_test.yml)
 [![GitHub Release Date](https://img.shields.io/github/release-date/spoonboy-io/ghost?style=flat-square)](https://github.com/spoonboy-io/ghost/releases)
 [![GitHub commits since latest release (by date)](https://img.shields.io/github/commits-since/spoonboy-io/ghost/latest?style=flat-square)](https://github.com/spoonboy-io/ghost/commits)
 [![GitHub](https://img.shields.io/github/license/spoonboy-io/ghost?label=license&style=flat-square)](LICENSE)

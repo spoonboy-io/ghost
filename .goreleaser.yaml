@@ -8,7 +8,7 @@ builds:
       - linux
       - darwin
     ldflags:
-      - -s -w -X main.version={{.Tag}} -X main.goversion=1.20
+      - -s -w -X main.version={{.Tag}} -X main.goversion=1.20.4
     main: ./cmd/ghost
 archives:
   - name_template: >-
