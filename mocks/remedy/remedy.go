@@ -1,5 +1,5 @@
 /*
-Package remedy provides mocks for Remedy backup server covering:
+Package remedy provides mocks for Remedy server covering:
 - authentication
 - logout
 - TODO adding work order item
