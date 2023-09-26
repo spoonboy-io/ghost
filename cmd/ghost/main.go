@@ -5,9 +5,11 @@ import (
 	"flag"
 	"fmt"
 	"github.com/spoonboy-io/ghost/internal/mocks"
+	"github.com/spoonboy-io/ghost/mocks/remedy"
 	"io/ioutil"
 	"log"
 	"net/http"
+	"strings"
 )
 
 type MockLoaderResponse struct {
@@ -82,9 +84,19 @@ func handler(w http.ResponseWriter, r *http.Request) {
 	}
 	defer r.Body.Close()
 
-	err = json.Unmarshal(bytes, &reqBody)
-	if err != nil {
-		log.Fatalln(err)
+	if r.Header.Get("Content-Type") == "application/x-www-form-urlencoded" {
+		// make the map by parsing
+		pairs := strings.Split(string(bytes), "&")
+		for _, pair := range pairs {
+			kv := strings.Split(pair, "=")
+			reqBody[kv[0]] = kv[1]
+		}
+	} else {
+		// json to unmarshal
+		err = json.Unmarshal(bytes, &reqBody)
+		if err != nil {
+			log.Fatalln("could not unmarshal request body", err)
+		}
 	}
 
 	for mk, mv := range mock.Request.Body {
@@ -120,7 +132,7 @@ func handler(w http.ResponseWriter, r *http.Request) {
 	}
 	body, err := json.Marshal(mock.Response.Body)
 	if err != nil {
-		log.Fatalln(err)
+		log.Fatalln("could not marshal reponse body", err)
 	}
 	_, _ = w.Write(body)
 }
@@ -156,6 +168,7 @@ func mockLoader(w http.ResponseWriter, r *http.Request) {
 			// key is endpoint, verb
 			mockKey := fmt.Sprintf("%s-%s", mock.EndPoint, mock.Request.Verb)
 			mocksCache[mockKey] = mock
+			log.Printf("added new mock '%s'\n", mockKey)
 		}
 
 		if onErr {
@@ -179,9 +192,8 @@ func mockLoader(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
-	// port for server should be read from command line
+	// read port from cli -p flag or default to 9999
 	var port int
-
 	flag.IntVar(&port, "p", 9999, "Specify a port number (default is 9999")
 	flag.Parse()
 	portStr := fmt.Sprintf(":%d", port)
@@ -192,10 +204,24 @@ func main() {
 	// except this one, where we can load mock config in realtime
 	http.HandleFunc("/load/mock", mockLoader)
 
-	// load packaged mocks
-	//packaged := []
+	// as well as load mocks via the above server endpoint
+	// we have the ability to include packaged mocks for things we may reuse
+	packagedMocks := []mocks.Mocker{
+		// add packaged mocks here, which must satisfy the mocks.Mocker interface
+		remedy.Remedy{},
+	}
 
-	log.Println("Starting Ghost server on port", portStr)
+	// add packaged mocks to mocksCache
+	for _, pkg := range packagedMocks {
+		pkgMocks := pkg.Mocks()
+		log.Printf("loading mocks from '%s' package\n", pkg.Name())
+		for _, mock := range pkgMocks {
+			mockKey := fmt.Sprintf("%s-%s", mock.EndPoint, mock.Request.Verb)
+			mocksCache[mockKey] = mock
+		}
+	}
+
+	log.Println("starting Ghost server on port", portStr)
 	if err := http.ListenAndServe(portStr, nil); err != nil {
 		log.Fatalln("failed to start server")
 	}
