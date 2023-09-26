@@ -38,11 +38,10 @@ func main() {
 	portStr := fmt.Sprintf(":%d", port)
 
 	// handlers
-	// everything hits this endpoint
 	app := &handlers.App{
 		Logger: logger,
 	}
-
+	// everything hits this endpoint
 	http.HandleFunc("/", app.Handler)
 	// except this one, where we can load mock config in realtime
 	http.HandleFunc("/load/mock", app.MockLoader)
