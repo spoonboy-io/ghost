@@ -4,8 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/spoonboy-io/ghost/internal/mocks"
+	"github.com/spoonboy-io/koan"
 	"io/ioutil"
-	"log"
 	"net/http"
 	"strings"
 )
@@ -26,6 +26,10 @@ type MockErrorResponse struct {
 	Detail     string `json:"detail"`
 }
 
+type App struct {
+	Logger *koan.Logger
+}
+
 // MocksCache is a map cache of mocks, store on key of `uri-method`
 var MocksCache = make(map[string]mocks.Mock)
 
@@ -34,7 +38,7 @@ var MocksCache = make(map[string]mocks.Mock)
 // request header and request body is checked agains the data specified in the mock, if the a match
 // the mock response is emitted to the client, otherwise errors are returned which identify how the request
 // was not a match or the data supplied was unacceptable
-func Handler(w http.ResponseWriter, r *http.Request) {
+func (a *App) Handler(w http.ResponseWriter, r *http.Request) {
 	var mock mocks.Mock
 	var ok bool
 
@@ -49,7 +53,7 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 		res.Detail = fmt.Sprintf("No mock for found for Url:%s and Method: %s", r.URL, r.Method)
 		out, err := json.Marshal(res)
 		if err != nil {
-			log.Println(err)
+			a.Logger.Error("problem marshaling response", err)
 		}
 		_, _ = w.Write(out)
 		return
@@ -79,7 +83,7 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 		res.Detail = fmt.Sprintf("Request Headers do not meet expectations. Wanted: %v, Got: %v", mock.Request.Headers, r.Header)
 		out, err := json.Marshal(res)
 		if err != nil {
-			log.Println(err)
+			a.Logger.Error("problem marshaling response", err)
 		}
 		_, _ = w.Write(out)
 		return
@@ -90,7 +94,7 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 	reqBody := mocks.Properties{}
 	bytes, err := ioutil.ReadAll(r.Body)
 	if err != nil {
-		log.Fatalln(err)
+		a.Logger.Error("problem reading request body", err)
 	}
 	defer r.Body.Close()
 
@@ -106,7 +110,7 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 			// json to unmarshal
 			err = json.Unmarshal(bytes, &reqBody)
 			if err != nil {
-				log.Fatalln("could not unmarshal request body", err)
+				a.Logger.Error("problem marshaling request body", err)
 			}
 		}
 	}
@@ -132,7 +136,7 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 		res.Detail = fmt.Sprintf("Request Body does not meet expecations. Wanted: %v, Got: %v", mock.Request.Body, reqBody)
 		out, err := json.Marshal(res)
 		if err != nil {
-			log.Println(err)
+			a.Logger.Error("problem marshaling response", err)
 		}
 		_, _ = w.Write(out)
 		return
@@ -155,14 +159,14 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 
 	body, err := json.Marshal(mock.Response.Body)
 	if err != nil {
-		log.Fatalln("could not marshal response body", err)
+		a.Logger.Error("could not marshal response body", err)
 	}
 	_, _ = w.Write(body)
 }
 
 // MockLoader allows mocks signatures to be loaded to the server cache on the fly
 // via a POST request to ths listening endpoint
-func MockLoader(w http.ResponseWriter, r *http.Request) {
+func (a *App) MockLoader(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("content-type", "application/json")
 	res := MockLoaderResponse{}
 	if r.Method != http.MethodPost {
@@ -180,20 +184,20 @@ func MockLoader(w http.ResponseWriter, r *http.Request) {
 
 			if err != nil {
 				onErr = true
-				log.Println("could not read request body")
+				a.Logger.Error("problem reading request body", err)
 			}
 
 			mock := mocks.Mock{}
 			if err := json.Unmarshal(body, &mock); err != nil {
 				onErr = true
-				log.Println("could not unmarshal request body")
+				a.Logger.Error("problem unmarshaling request body", err)
 			}
 
 			// add/update the mocks list
 			// key is endpoint, verb
 			mockKey := fmt.Sprintf("%s-%s", mock.EndPoint, mock.Request.Verb)
 			MocksCache[mockKey] = mock
-			log.Printf("added new mock '%s'\n", mockKey)
+			a.Logger.Info(fmt.Sprintf("added new mock '%s'\n", mockKey))
 		}
 
 		if onErr {
@@ -210,7 +214,7 @@ func MockLoader(w http.ResponseWriter, r *http.Request) {
 
 	out, err := json.Marshal(res)
 	if err != nil {
-		log.Println(err)
+		a.Logger.Error("problem marshaling response", err)
 	}
 
 	_, _ = w.Write(out)

@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/spoonboy-io/ghost/internal/mocks"
+	"github.com/spoonboy-io/koan"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -115,7 +116,10 @@ func TestMockLoader(t *testing.T) {
 			}
 
 			rr := httptest.NewRecorder()
-			handler := http.HandlerFunc(MockLoader)
+			app := &App{
+				Logger: &koan.Logger{},
+			}
+			handler := http.HandlerFunc(app.MockLoader)
 			handler.ServeHTTP(rr, req)
 
 			if status := rr.Code; status != tc.WantStatus.StatusCode {
@@ -425,7 +429,11 @@ func TestHandler(t *testing.T) {
 			}
 
 			rr := httptest.NewRecorder()
-			handler := http.HandlerFunc(Handler)
+			app := &App{
+				Logger: &koan.Logger{},
+			}
+
+			handler := http.HandlerFunc(app.Handler)
 			handler.ServeHTTP(rr, req)
 
 			if status := rr.Code; status != tc.WantStatus.StatusCode {

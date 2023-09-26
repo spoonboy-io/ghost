@@ -8,7 +8,6 @@ import (
 	"github.com/spoonboy-io/ghost/mocks/remedy"
 	"github.com/spoonboy-io/koan"
 	"github.com/spoonboy-io/reprise"
-	"log"
 	"net/http"
 )
 
@@ -40,9 +39,13 @@ func main() {
 
 	// handlers
 	// everything hits this endpoint
-	http.HandleFunc("/", handlers.Handler)
+	app := &handlers.App{
+		Logger: logger,
+	}
+
+	http.HandleFunc("/", app.Handler)
 	// except this one, where we can load mock config in realtime
-	http.HandleFunc("/load/mock", handlers.MockLoader)
+	http.HandleFunc("/load/mock", app.MockLoader)
 
 	// as well as load mocks via the above server endpoint
 	// we have the ability to include packaged mocks for things we may reuse
@@ -54,15 +57,15 @@ func main() {
 	// add packaged mocks to mocksCache
 	for _, pkg := range packagedMocks {
 		pkgMocks := pkg.Mocks()
-		log.Printf("loading mocks from '%s' package\n", pkg.Name())
+		logger.Info(fmt.Sprintf("loading mocks from '%s' package", pkg.Name()))
 		for _, mock := range pkgMocks {
 			mockKey := fmt.Sprintf("%s-%s", mock.EndPoint, mock.Request.Verb)
 			handlers.MocksCache[mockKey] = mock
 		}
 	}
 
-	log.Println("starting Ghost server on port", portStr)
+	logger.Info(fmt.Sprintf("starting Ghost server on port %s", portStr))
 	if err := http.ListenAndServe(portStr, nil); err != nil {
-		log.Fatalln("failed to start server")
+		logger.FatalError("failed to start server", err)
 	}
 }
