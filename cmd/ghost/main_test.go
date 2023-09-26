@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"github.com/spoonboy-io/ghost/internal/mocks"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -12,7 +13,7 @@ import (
 type TestCase struct {
 	Name           string
 	Method         string
-	Mock           Mock
+	Mock           mocks.Mock
 	BreakBody      bool
 	WantStatusCode int
 	WantStatus     MockLoaderResponse
@@ -25,17 +26,17 @@ func TestMockLoader(t *testing.T) {
 		{
 			Name:   "Bad - sending GET request",
 			Method: "GET",
-			Mock: Mock{
+			Mock: mocks.Mock{
 				EndPoint: "test/bad-get",
-				Request: Request{
+				Request: mocks.Request{
 					Verb: "GET",
-					Headers: Properties{
+					Headers: mocks.Properties{
 						"content-type": "application/json",
 					},
 				},
-				Response: Response{
+				Response: mocks.Response{
 					StatusCode: 200,
-					Headers: Properties{
+					Headers: mocks.Properties{
 						"content-type": "application/json",
 					},
 					Body: "{\"hello\":\"world\"}",
@@ -49,17 +50,17 @@ func TestMockLoader(t *testing.T) {
 		{
 			Name:   "Bad - sending POST request, bad body",
 			Method: "POST",
-			Mock: Mock{
+			Mock: mocks.Mock{
 				EndPoint: "test/bad-post",
-				Request: Request{
+				Request: mocks.Request{
 					Verb: "POST",
-					Headers: Properties{
+					Headers: mocks.Properties{
 						"content-type": "application/json",
 					},
 				},
-				Response: Response{
+				Response: mocks.Response{
 					StatusCode: 200,
-					Headers: Properties{
+					Headers: mocks.Properties{
 						"content-type": "application/json",
 					},
 					Body: "{\"hello\":\"world\"}",
@@ -74,18 +75,18 @@ func TestMockLoader(t *testing.T) {
 		{
 			Name:   "Good sending POST request with body",
 			Method: "POST",
-			Mock: Mock{
+			Mock: mocks.Mock{
 				EndPoint: "test/good",
-				Request: Request{
+				Request: mocks.Request{
 					Verb: "POST",
-					Headers: Properties{
+					Headers: mocks.Properties{
 						"content-type": "application/json",
 					},
-					Body: Properties{},
+					Body: mocks.Properties{},
 				},
-				Response: Response{
+				Response: mocks.Response{
 					StatusCode: 201,
-					Headers: Properties{
+					Headers: mocks.Properties{
 						"content-type": "application/json",
 					},
 					Body: "{\"hello\":\"world\"}",
@@ -129,21 +130,21 @@ func TestMockLoader(t *testing.T) {
 
 func seedMockData() {
 	// seed some dummy data for tests
-	dummies := []Mock{
+	dummies := []mocks.Mock{
 		{
 			EndPoint: "good/data",
-			Request: Request{
+			Request: mocks.Request{
 				Verb: "POST",
-				Headers: Properties{
+				Headers: mocks.Properties{
 					"content-type": "application/json",
 				},
-				Body: Properties{
+				Body: mocks.Properties{
 					"testKey": "test value",
 				},
 			},
-			Response: Response{
+			Response: mocks.Response{
 				StatusCode: 201,
-				Headers: Properties{
+				Headers: mocks.Properties{
 					"content-type": "application/json",
 				},
 				Body: "{\"hello\":\"world\"}",
@@ -154,7 +155,7 @@ func seedMockData() {
 	// load the dummies to mocks map
 	for _, mock := range dummies {
 		key := fmt.Sprintf("%s-%s", mock.EndPoint, mock.Request.Verb)
-		mocks[key] = mock
+		mocksCache[key] = mock
 	}
 
 }
@@ -167,20 +168,20 @@ func TestHandler(t *testing.T) {
 		{
 			Name:   "Good, request uri, method, headers and body match stored mock",
 			Method: "POST",
-			Mock: Mock{
+			Mock: mocks.Mock{
 				EndPoint: "good/data",
-				Request: Request{
+				Request: mocks.Request{
 					Verb: "POST",
-					Headers: Properties{
+					Headers: mocks.Properties{
 						"content-type": "application/json",
 					},
-					Body: Properties{
+					Body: mocks.Properties{
 						"testKey": "test value",
 					},
 				},
-				Response: Response{
+				Response: mocks.Response{
 					StatusCode: 201,
-					Headers: Properties{
+					Headers: mocks.Properties{
 						"content-type": "application/json",
 					},
 					Body: "{\"hello\":\"world\"}",
@@ -194,20 +195,20 @@ func TestHandler(t *testing.T) {
 		{
 			Name:   "Bad, request method not match",
 			Method: "POST",
-			Mock: Mock{
+			Mock: mocks.Mock{
 				EndPoint: "good/data",
-				Request: Request{
+				Request: mocks.Request{
 					Verb: "GET",
-					Headers: Properties{
+					Headers: mocks.Properties{
 						"content-type": "application/json",
 					},
-					Body: Properties{
+					Body: mocks.Properties{
 						"testKey": "test value",
 					},
 				},
-				Response: Response{
+				Response: mocks.Response{
 					StatusCode: 201,
-					Headers: Properties{
+					Headers: mocks.Properties{
 						"content-type": "application/json",
 					},
 					Body: "{\"hello\":\"world\"}",
@@ -221,20 +222,20 @@ func TestHandler(t *testing.T) {
 		{
 			Name:   "Bad, request uri not match",
 			Method: "POST",
-			Mock: Mock{
+			Mock: mocks.Mock{
 				EndPoint: "good/data/",
-				Request: Request{
+				Request: mocks.Request{
 					Verb: "GET",
-					Headers: Properties{
+					Headers: mocks.Properties{
 						"content-type": "application/json",
 					},
-					Body: Properties{
+					Body: mocks.Properties{
 						"testKey": "test value",
 					},
 				},
-				Response: Response{
+				Response: mocks.Response{
 					StatusCode: 201,
-					Headers: Properties{
+					Headers: mocks.Properties{
 						"content-type": "application/json",
 					},
 					Body: "{\"hello\":\"world\"}",
@@ -248,20 +249,20 @@ func TestHandler(t *testing.T) {
 		{
 			Name:   "Bad request header not match",
 			Method: "POST",
-			Mock: Mock{
+			Mock: mocks.Mock{
 				EndPoint: "good/data",
-				Request: Request{
+				Request: mocks.Request{
 					Verb: "POST",
-					Headers: Properties{
+					Headers: mocks.Properties{
 						"content-type": "application/text",
 					},
-					Body: Properties{
+					Body: mocks.Properties{
 						"testKey": "test value",
 					},
 				},
-				Response: Response{
+				Response: mocks.Response{
 					StatusCode: 201,
-					Headers: Properties{
+					Headers: mocks.Properties{
 						"content-type": "application/json",
 					},
 					Body: "{\"hello\":\"world\"}",
@@ -275,20 +276,20 @@ func TestHandler(t *testing.T) {
 		{
 			Name:   "Good request but header key not match (case)",
 			Method: "POST",
-			Mock: Mock{
+			Mock: mocks.Mock{
 				EndPoint: "good/data",
-				Request: Request{
+				Request: mocks.Request{
 					Verb: "POST",
-					Headers: Properties{
+					Headers: mocks.Properties{
 						"Content-Type": "application/json",
 					},
-					Body: Properties{
+					Body: mocks.Properties{
 						"testKey": "test value",
 					},
 				},
-				Response: Response{
+				Response: mocks.Response{
 					StatusCode: 201,
-					Headers: Properties{
+					Headers: mocks.Properties{
 						"content-type": "application/json",
 					},
 					Body: "{\"hello\":\"world\"}",
@@ -302,20 +303,20 @@ func TestHandler(t *testing.T) {
 		{
 			Name:   "Bad, request header not present",
 			Method: "POST",
-			Mock: Mock{
+			Mock: mocks.Mock{
 				EndPoint: "good/data",
-				Request: Request{
+				Request: mocks.Request{
 					Verb: "POST",
-					Headers: Properties{
+					Headers: mocks.Properties{
 						"authorization": "bearer xxxxxx",
 					},
-					Body: Properties{
+					Body: mocks.Properties{
 						"testKey": "test value",
 					},
 				},
-				Response: Response{
+				Response: mocks.Response{
 					StatusCode: 201,
-					Headers: Properties{
+					Headers: mocks.Properties{
 						"content-type": "application/json",
 					},
 					Body: "{\"hello\":\"world\"}",
@@ -329,20 +330,20 @@ func TestHandler(t *testing.T) {
 		{
 			Name:   "Bad, request body property not match",
 			Method: "POST",
-			Mock: Mock{
+			Mock: mocks.Mock{
 				EndPoint: "good/data",
-				Request: Request{
+				Request: mocks.Request{
 					Verb: "POST",
-					Headers: Properties{
+					Headers: mocks.Properties{
 						"content-type": "application/json",
 					},
-					Body: Properties{
+					Body: mocks.Properties{
 						"testKey": "this is the wrong value",
 					},
 				},
-				Response: Response{
+				Response: mocks.Response{
 					StatusCode: 201,
-					Headers: Properties{
+					Headers: mocks.Properties{
 						"content-type": "application/json",
 					},
 					Body: "{\"hello\":\"world\"}",
@@ -356,20 +357,20 @@ func TestHandler(t *testing.T) {
 		{
 			Name:   "Bad request but body key not match (case we are not doing case match on request body)",
 			Method: "POST",
-			Mock: Mock{
+			Mock: mocks.Mock{
 				EndPoint: "good/data",
-				Request: Request{
+				Request: mocks.Request{
 					Verb: "POST",
-					Headers: Properties{
+					Headers: mocks.Properties{
 						"content-type": "application/json",
 					},
-					Body: Properties{
+					Body: mocks.Properties{
 						"testkey": "test value",
 					},
 				},
-				Response: Response{
+				Response: mocks.Response{
 					StatusCode: 201,
-					Headers: Properties{
+					Headers: mocks.Properties{
 						"content-type": "application/json",
 					},
 					Body: "{\"hello\":\"world\"}",
@@ -383,18 +384,18 @@ func TestHandler(t *testing.T) {
 		{
 			Name:   "Bad, request body property not present",
 			Method: "POST",
-			Mock: Mock{
+			Mock: mocks.Mock{
 				EndPoint: "good/data",
-				Request: Request{
+				Request: mocks.Request{
 					Verb: "POST",
-					Headers: Properties{
+					Headers: mocks.Properties{
 						"content-type": "application/json",
 					},
-					Body: Properties{},
+					Body: mocks.Properties{},
 				},
-				Response: Response{
+				Response: mocks.Response{
 					StatusCode: 201,
-					Headers: Properties{
+					Headers: mocks.Properties{
 						"content-type": "application/json",
 					},
 					Body: "{\"hello\":\"world\"}",
