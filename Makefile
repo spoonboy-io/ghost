@@ -3,3 +3,12 @@ run:
 
 test:
 	go test -v --cover ./...
+
+build:
+	go build ./cmd/ghost
+
+release:
+	@echo "Enter the release version (format vx.x.x).."; \
+	read VERSION; \
+	git tag -a $$VERSION -m "Releasing "$$VERSION; \
+	git push origin $$VERSION
