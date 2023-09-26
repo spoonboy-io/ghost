@@ -1,4 +1,4 @@
-package main
+package handlers
 
 import (
 	"bytes"
@@ -115,7 +115,7 @@ func TestMockLoader(t *testing.T) {
 			}
 
 			rr := httptest.NewRecorder()
-			handler := http.HandlerFunc(mockLoader)
+			handler := http.HandlerFunc(MockLoader)
 			handler.ServeHTTP(rr, req)
 
 			if status := rr.Code; status != tc.WantStatus.StatusCode {
@@ -154,7 +154,7 @@ func seedMockData() {
 	// load the dummies to mocks map
 	for _, mock := range dummies {
 		key := fmt.Sprintf("%s-%s", mock.EndPoint, mock.Request.Verb)
-		mocksCache[key] = mock
+		MocksCache[key] = mock
 	}
 
 }
@@ -425,7 +425,7 @@ func TestHandler(t *testing.T) {
 			}
 
 			rr := httptest.NewRecorder()
-			handler := http.HandlerFunc(handler)
+			handler := http.HandlerFunc(Handler)
 			handler.ServeHTTP(rr, req)
 
 			if status := rr.Code; status != tc.WantStatus.StatusCode {

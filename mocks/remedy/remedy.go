@@ -12,8 +12,10 @@ import (
 	"net/http"
 )
 
+// Remedy empty struct on which we implement the Mocker interface
 type Remedy struct{}
 
+// Mocks returns the mocks to be loaded as part of this package
 func (Remedy) Mocks() []mocks.Mock {
 	return []mocks.Mock{
 		// authentication request
@@ -60,6 +62,8 @@ func (Remedy) Mocks() []mocks.Mock {
 	}
 }
 
+// Name returns the package name, which is displayed at start up
+// when the packaged  mocks are loaded
 func (Remedy) Name() string {
 	return "Remedy"
 }
