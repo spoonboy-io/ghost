@@ -121,17 +121,24 @@ func (a *App) Handler(w http.ResponseWriter, r *http.Request) {
 	for mk, mv := range mock.Request.Body {
 		var bv string
 		var ok bool
-		if bv, ok = reqBody[mk].(string); !ok {
-			allRequestBody = false
-		} else {
-			if mv != bv {
+
+		// type assertion
+		switch reqBody[mk].(type) {
+		case string:
+			if bv, ok = reqBody[mk].(string); !ok {
+				//fmt.Println(reqBody)
+				fmt.Println("missing", mk, reqBody[mk].(string))
 				allRequestBody = false
+			} else {
+				if mv != bv {
+					allRequestBody = false
+				}
 			}
 		}
 	}
 
 	_ = allRequestBody
-	/*if !allRequestBody {
+	if !allRequestBody {
 		res := MockErrorResponse{}
 		w.Header().Set("content-type", "application/json")
 		w.WriteHeader(http.StatusNotAcceptable)
@@ -144,7 +151,7 @@ func (a *App) Handler(w http.ResponseWriter, r *http.Request) {
 		}
 		_, _ = w.Write(out)
 		return
-	}*/
+	}
 
 	// if here we are good and we'll output the mock response
 	w.WriteHeader(mock.Response.StatusCode)
@@ -178,7 +185,6 @@ func (a *App) Handler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	fmt.Println(string(body))
-
 	_, _ = w.Write(body)
 }
 
