@@ -42,6 +42,8 @@ func (a *App) Handler(w http.ResponseWriter, r *http.Request) {
 	var mock mocks.Mock
 	var ok bool
 
+	//fmt.Println(r)
+
 	// strip end point, and verb
 	key := fmt.Sprintf("%s-%s", r.URL, r.Method)
 	if mock, ok = MocksCache[key]; !ok {
@@ -80,7 +82,7 @@ func (a *App) Handler(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusNotAcceptable)
 		res.StatusCode = http.StatusNotAcceptable
 		res.Status = "Not Acceptable"
-		res.Detail = fmt.Sprintf("Request Headers do not meet expectations. Wanted: %v, Got: %v", mock.Request.Headers, r.Header)
+		res.Detail = fmt.Sprintf("Request Headers do not meet expectations. Wanted: %vGot: %v", mock.Request.Headers, r.Header)
 		out, err := json.Marshal(res)
 		if err != nil {
 			a.Logger.Error("problem marshaling response", err)
@@ -92,6 +94,7 @@ func (a *App) Handler(w http.ResponseWriter, r *http.Request) {
 	// request body
 	allRequestBody := true
 	reqBody := mocks.Properties{}
+
 	bytes, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		a.Logger.Error("problem reading request body", err)
@@ -118,7 +121,7 @@ func (a *App) Handler(w http.ResponseWriter, r *http.Request) {
 	for mk, mv := range mock.Request.Body {
 		var bv string
 		var ok bool
-		if bv, ok = reqBody[mk]; !ok {
+		if bv, ok = reqBody[mk].(string); !ok {
 			allRequestBody = false
 		} else {
 			if mv != bv {
@@ -127,7 +130,8 @@ func (a *App) Handler(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	if !allRequestBody {
+	_ = allRequestBody
+	/*if !allRequestBody {
 		res := MockErrorResponse{}
 		w.Header().Set("content-type", "application/json")
 		w.WriteHeader(http.StatusNotAcceptable)
@@ -140,19 +144,30 @@ func (a *App) Handler(w http.ResponseWriter, r *http.Request) {
 		}
 		_, _ = w.Write(out)
 		return
-	}
+	}*/
 
 	// if here we are good and we'll output the mock response
 	w.WriteHeader(mock.Response.StatusCode)
 	for k, v := range mock.Response.Headers {
-		w.Header().Add(k, v)
+		w.Header().Add(k, v.(string))
 	}
 
 	// handle text/plain
 	if ct, ok := mock.Response.Headers["Content-Type"]; ok {
 		if ct == "text/plain" {
 			w.Header().Set("content-type", "text/plain")
-			_, _ = w.Write([]byte(mock.Response.Body))
+			// convert to json
+			out := ""
+			for k, v := range mock.Response.Body {
+				if v == nil {
+					out += fmt.Sprintf("%s", k)
+				}
+			}
+
+			if err != nil {
+				a.Logger.Error("could not marshal response body", err)
+			}
+			_, _ = w.Write([]byte(out))
 			return
 		}
 	}
@@ -161,6 +176,9 @@ func (a *App) Handler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		a.Logger.Error("could not marshal response body", err)
 	}
+
+	fmt.Println(string(body))
+
 	_, _ = w.Write(body)
 }
 
@@ -216,6 +234,5 @@ func (a *App) MockLoader(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		a.Logger.Error("problem marshaling response", err)
 	}
-
 	_, _ = w.Write(out)
 }

@@ -1,7 +1,8 @@
 package mocks
 
 // Properties is used for to store key value attributes of headers and request bodies
-type Properties map[string]string
+// type Properties map[string]string
+type Properties map[string]interface{}
 
 // Request describes the data we keep about a mock request
 type Request struct {
@@ -14,7 +15,7 @@ type Request struct {
 type Response struct {
 	StatusCode int        `json:"status"`
 	Headers    Properties `json:"headers"`
-	Body       string     `json:"body"`
+	Body       Properties `json:"body"`
 }
 
 // Mock represents a single mock, it's endpoint, the request, and the response

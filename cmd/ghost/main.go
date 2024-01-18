@@ -63,6 +63,8 @@ func main() {
 		}
 	}
 
+	//fmt.Println("mocks:", handlers.MocksCache)
+
 	logger.Info(fmt.Sprintf("starting Ghost server on port %s", portStr))
 	if err := http.ListenAndServe(portStr, nil); err != nil {
 		logger.FatalError("failed to start server", err)
