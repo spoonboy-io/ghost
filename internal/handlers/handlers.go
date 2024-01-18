@@ -42,7 +42,7 @@ func (a *App) Handler(w http.ResponseWriter, r *http.Request) {
 	var mock mocks.Mock
 	var ok bool
 
-	//fmt.Println(r)
+	fmt.Println(r.URL)
 
 	// strip end point, and verb
 	key := fmt.Sprintf("%s-%s", r.URL, r.Method)
