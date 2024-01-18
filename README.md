@@ -40,9 +40,16 @@ TODO
 TODO
 
 ### Installation
-Grab the tar.gz or zip archive for your OS from the [releases page](https://github.com/spoonboy-io/ghost/releases/latest).
 
-Unpack it and then start the server on the default port of `9999`:
+Clone the repository and use:
+
+```
+make build
+```
+
+Or grab the tar.gz or zip archive for your OS from the [releases page](https://github.com/spoonboy-io/ghost/releases/latest) and unpack it.
+
+In either case, you can then start the server on the default port of `9999`:
 
 ```
 ./ghost
