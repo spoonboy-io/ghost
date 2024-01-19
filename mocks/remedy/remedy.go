@@ -69,11 +69,10 @@ func (Remedy) Mocks() []mocks.Mock {
 				},
 				Body: mocks.Properties{
 					"values": mocks.Properties{
-						"TitleInstanceID": "<%=instance.name%>",
-						"Source Keyword":  "Morpheus CMP",
-						"Login ID":        "<%=customOptions.vmowner%>",
-						"OfferingTitle":   "Morpheus Provisioned Catalog Item",
-
+						"TitleInstanceID":  "<%=instance.name%>",
+						"Source Keyword":   "Morpheus CMP",
+						"Login ID":         "<%=customOptions.vmowner%>",
+						"OfferingTitle":    "Morpheus Provisioned Catalog Item",
 						"SR Type Field 10": "Medium",
 						"SR Type Field 14": "N/A",
 						"SR Type Field 15": "Morpheus Catalog Item",
@@ -108,7 +107,6 @@ func (Remedy) Mocks() []mocks.Mock {
 
 		// get status of work order (waiting approval)
 		{
-			///api/arsys/v1/entry/SRM:RequestApDetailSignature?fields=values(Request%20Number,Approval%20Status,Approvers)&q='Request%20Number'=%221234%22
 			EndPoint: "/api/arsys/v1/entry/SRM:RequestApDetailSignature?fields=values(Request%20Number,Approval%20Status,Approvers)&q='Request%20Number'=%221234%22",
 			Request: mocks.Request{
 				Verb: "GET",

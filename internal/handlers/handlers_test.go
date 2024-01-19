@@ -39,7 +39,9 @@ func TestMockLoader(t *testing.T) {
 					Headers: mocks.Properties{
 						"content-type": "application/json",
 					},
-					Body: "{\"hello\":\"world\"}",
+					Body: mocks.Properties{
+						"hello": "world",
+					},
 				},
 			},
 			WantStatusCode: http.StatusMethodNotAllowed,
@@ -63,7 +65,9 @@ func TestMockLoader(t *testing.T) {
 					Headers: mocks.Properties{
 						"content-type": "application/json",
 					},
-					Body: "{\"hello\":\"world\"}",
+					Body: mocks.Properties{
+						"hello": "world",
+					},
 				},
 			},
 			BreakBody:      true,
@@ -89,7 +93,9 @@ func TestMockLoader(t *testing.T) {
 					Headers: mocks.Properties{
 						"content-type": "application/json",
 					},
-					Body: "{\"hello\":\"world\"}",
+					Body: mocks.Properties{
+						"hello": "world",
+					},
 				},
 			},
 			WantStatusCode: http.StatusCreated,
@@ -150,7 +156,9 @@ func seedMockData() {
 				Headers: mocks.Properties{
 					"content-type": "application/json",
 				},
-				Body: "{\"hello\":\"world\"}",
+				Body: mocks.Properties{
+					"hello": "world",
+				},
 			},
 		},
 	}
@@ -187,7 +195,9 @@ func TestHandler(t *testing.T) {
 					Headers: mocks.Properties{
 						"content-type": "application/json",
 					},
-					Body: "{\"hello\":\"world\"}",
+					Body: mocks.Properties{
+						"hello": "world",
+					},
 				},
 			},
 			WantStatusCode: http.StatusCreated,
@@ -214,7 +224,9 @@ func TestHandler(t *testing.T) {
 					Headers: mocks.Properties{
 						"content-type": "application/json",
 					},
-					Body: "{\"hello\":\"world\"}",
+					Body: mocks.Properties{
+						"hello": "world",
+					},
 				},
 			},
 			WantStatusCode: http.StatusBadRequest,
@@ -241,7 +253,9 @@ func TestHandler(t *testing.T) {
 					Headers: mocks.Properties{
 						"content-type": "application/json",
 					},
-					Body: "{\"hello\":\"world\"}",
+					Body: mocks.Properties{
+						"hello": "world",
+					},
 				},
 			},
 			WantStatusCode: http.StatusBadRequest,
@@ -268,7 +282,9 @@ func TestHandler(t *testing.T) {
 					Headers: mocks.Properties{
 						"content-type": "application/json",
 					},
-					Body: "{\"hello\":\"world\"}",
+					Body: mocks.Properties{
+						"hello": "world",
+					},
 				},
 			},
 			WantStatusCode: http.StatusNotAcceptable,
@@ -295,7 +311,9 @@ func TestHandler(t *testing.T) {
 					Headers: mocks.Properties{
 						"content-type": "application/json",
 					},
-					Body: "{\"hello\":\"world\"}",
+					Body: mocks.Properties{
+						"hello": "world",
+					},
 				},
 			},
 			WantStatusCode: http.StatusCreated,
@@ -322,7 +340,9 @@ func TestHandler(t *testing.T) {
 					Headers: mocks.Properties{
 						"content-type": "application/json",
 					},
-					Body: "{\"hello\":\"world\"}",
+					Body: mocks.Properties{
+						"hello": "world",
+					},
 				},
 			},
 			WantStatusCode: http.StatusNotAcceptable,
@@ -349,7 +369,9 @@ func TestHandler(t *testing.T) {
 					Headers: mocks.Properties{
 						"content-type": "application/json",
 					},
-					Body: "{\"hello\":\"world\"}",
+					Body: mocks.Properties{
+						"hello": "world",
+					},
 				},
 			},
 			WantStatusCode: http.StatusNotAcceptable,
@@ -376,7 +398,9 @@ func TestHandler(t *testing.T) {
 					Headers: mocks.Properties{
 						"content-type": "application/json",
 					},
-					Body: "{\"hello\":\"world\"}",
+					Body: mocks.Properties{
+						"hello": "world",
+					},
 				},
 			},
 			WantStatusCode: http.StatusNotAcceptable,
@@ -401,7 +425,9 @@ func TestHandler(t *testing.T) {
 					Headers: mocks.Properties{
 						"content-type": "application/json",
 					},
-					Body: "{\"hello\":\"world\"}",
+					Body: mocks.Properties{
+						"hello": "world",
+					},
 				},
 			},
 			WantStatusCode: http.StatusNotAcceptable,
@@ -425,7 +451,7 @@ func TestHandler(t *testing.T) {
 
 			// add the headers
 			for k, v := range tc.Mock.Request.Headers {
-				req.Header.Set(k, v)
+				req.Header.Set(k, v.(string))
 			}
 
 			rr := httptest.NewRecorder()

@@ -42,7 +42,8 @@ func (a *App) Handler(w http.ResponseWriter, r *http.Request) {
 	var mock mocks.Mock
 	var ok bool
 
-	fmt.Println(r.URL)
+	msg := fmt.Sprintf("request '%s'", r.URL)
+	a.Logger.Info(msg)
 
 	// strip end point, and verb
 	key := fmt.Sprintf("%s-%s", r.URL, r.Method)
@@ -118,26 +119,33 @@ func (a *App) Handler(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	for mk, mv := range mock.Request.Body {
-		var bv string
-		var ok bool
-
-		// type assertion
-		switch reqBody[mk].(type) {
-		case string:
-			if bv, ok = reqBody[mk].(string); !ok {
-				//fmt.Println(reqBody)
-				fmt.Println("missing", mk, reqBody[mk].(string))
-				allRequestBody = false
-			} else {
-				if mv != bv {
+	if len(reqBody) == 0 && len(mock.Request.Body) != 0 {
+		allRequestBody = false
+	} else {
+		for mk, mv := range mock.Request.Body {
+			var bv string
+			var ok bool
+			// type assertion
+			switch reqBody[mk].(type) {
+			case string:
+				//fmt.Println("body", mk)
+				if bv, ok = reqBody[mk].(string); !ok {
+					fmt.Println("missing", mk)
+					allRequestBody = false
+				} else {
+					if mv != bv {
+						allRequestBody = false
+					}
+				}
+			case nil:
+				fmt.Println("body", mk)
+				if _, ok := reqBody[mk]; !ok {
 					allRequestBody = false
 				}
 			}
 		}
 	}
 
-	_ = allRequestBody
 	if !allRequestBody {
 		res := MockErrorResponse{}
 		w.Header().Set("content-type", "application/json")
@@ -174,6 +182,10 @@ func (a *App) Handler(w http.ResponseWriter, r *http.Request) {
 			if err != nil {
 				a.Logger.Error("could not marshal response body", err)
 			}
+
+			msg := fmt.Sprintf("response '%s'", out)
+			a.Logger.Info(msg)
+
 			_, _ = w.Write([]byte(out))
 			return
 		}
@@ -184,7 +196,9 @@ func (a *App) Handler(w http.ResponseWriter, r *http.Request) {
 		a.Logger.Error("could not marshal response body", err)
 	}
 
-	fmt.Println(string(body))
+	msg = fmt.Sprintf("response '%s'", string(body))
+	a.Logger.Info(msg)
+
 	_, _ = w.Write(body)
 }
 
