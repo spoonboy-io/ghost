@@ -33,11 +33,47 @@ You can find the [latest software here](https://github.com/spoonboy-io/ghost/rel
 
 #### Adding mocks at runtime
 
-TODO
+Load mocks to the server at runtime by making a POST request to the Ghost server on this endpoint
 
+```shell
+http://ghost/load/mock
+```
+
+The POST request body should be JSON which can be unmarshalled to a struct type of `mocks.Mock{}`
+
+```go
+// Mock represents a single mock, it's endpoint, the request, and the response
+type Mock struct {
+	EndPoint string   `json:"endPoint"`
+	Request  Request  `json:"request"`
+	Response Response `json:"response"`
+}
+```
 #### Creating mock packages to include at compile time
 
-TODO
+One package has already been created for Remedy and [can be found here](mocks/remedy/remedy.go). Use that as basis for creating
+additional packages. The struct type of any Mocks package must satisfy the Mocker interface:
+
+```go
+// Mocker is simple interface to describe the values which can load a suite of mocks
+// New packages can be created which implement this interface to preload mocks to the cache
+// such that they do not need to be individually loaded to the server via POST request
+type Mocker interface {
+	Mocks() []Mock
+	Name() string
+}
+```
+
+Add packages you wish to include with your Ghost runtime in [main.go](cmd/ghost/main.go):
+
+```go 
+// as well as load mocks via the above server endpoint
+// we have the ability to include packaged mocks for things we may reuse
+packagedMocks := []mocks.Mocker{
+	// add new packaged mocks here, which must satisfy the mocks.Mocker interface
+	remedy.Remedy{},
+}
+```
 
 ### Installation
 
