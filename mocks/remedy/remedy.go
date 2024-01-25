@@ -121,11 +121,11 @@ func (Remedy) Mocks() []mocks.Mock {
 					"Content-Type": "application/json",
 				},
 				Body: mocks.Properties{
-					"entities": []mocks.Properties{{
+					"entries": []mocks.Properties{{
 						"values": mocks.Properties{
-							"Request Number": "1234",
-							//"Approval Status": "Pending",
-							"Approval Status": "Approved",
+							"Request Number":  "1234",
+							"Approval Status": "Pending",
+							//"Approval Status": "Approved",
 						},
 					},
 					},
