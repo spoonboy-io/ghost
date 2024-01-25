@@ -12,3 +12,6 @@ release:
 	read VERSION; \
 	git tag -a $$VERSION -m "Releasing "$$VERSION; \
 	git push origin $$VERSION
+
+buildlin:
+	env GOOS=linux GOARCH=amd64 go build -o ghost-linux ./cmd/ghost
